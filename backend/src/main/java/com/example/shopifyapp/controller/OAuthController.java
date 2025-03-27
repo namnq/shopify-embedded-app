@@ -1,5 +1,8 @@
 package com.example.shopifyapp.controller;
 
+import com.example.shopifyapp.model.Shop;
+import com.example.shopifyapp.repository.ShopRepository;
+import com.example.shopifyapp.security.JwtService;
 import com.example.shopifyapp.security.ShopifyHmacValidator;
 import com.example.shopifyapp.service.WebhookRegistrationService;
 import org.slf4j.Logger;
@@ -20,6 +23,8 @@ public class OAuthController {
     private static final Logger logger = LoggerFactory.getLogger(OAuthController.class);
     private final ShopifyHmacValidator hmacValidator;
     private final WebhookRegistrationService webhookRegistrationService;
+    private final ShopRepository shopRepository;
+    private final JwtService jwtService;
     private final RestTemplate restTemplate;
 
     @Value("${shopify.app.api-key}")
@@ -35,9 +40,15 @@ public class OAuthController {
     private String appHost;
 
     @Autowired
-    public OAuthController(ShopifyHmacValidator hmacValidator, WebhookRegistrationService webhookRegistrationService) {
+    public OAuthController(
+            ShopifyHmacValidator hmacValidator,
+            WebhookRegistrationService webhookRegistrationService,
+            ShopRepository shopRepository,
+            JwtService jwtService) {
         this.hmacValidator = hmacValidator;
         this.webhookRegistrationService = webhookRegistrationService;
+        this.shopRepository = shopRepository;
+        this.jwtService = jwtService;
         this.restTemplate = new RestTemplate();
     }
 
@@ -93,15 +104,24 @@ public class OAuthController {
             // Exchange code for access token
             String accessToken = exchangeCodeForToken(shop, code);
             
+            // Store shop data
+            Shop shopEntity = shopRepository.save(Shop.builder()
+                .shopDomain(shop)
+                .accessToken(accessToken)
+                .isActive(true)
+                .build());
+            
+            // Generate JWT token
+            String token = jwtService.generateToken(shop, accessToken);
+            
             // Register webhooks
             webhookRegistrationService.registerWebhooks(shop, accessToken);
-
-            // TODO: Store shop and token in database
             
-            // Redirect to app home with success
-            String redirectUrl = String.format("/app?shop=%s&success=true", shop);
+            // Redirect to app home with JWT token
+            String redirectUrl = String.format("/app?shop=%s&token=%s", shop, token);
             return ResponseEntity.status(HttpStatus.FOUND)
                 .location(java.net.URI.create(redirectUrl))
+                .header(HttpHeaders.SET_COOKIE, String.format("shopify_token=%s; HttpOnly; Secure; SameSite=Lax", token))
                 .build();
 
         } catch (Exception e) {

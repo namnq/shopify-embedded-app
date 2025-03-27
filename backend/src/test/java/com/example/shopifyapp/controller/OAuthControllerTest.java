@@ -25,12 +25,18 @@ class OAuthControllerTest {
     @Mock
     private WebhookRegistrationService webhookRegistrationService;
 
+    @Mock
+    private ShopRepository shopRepository;
+
+    @Mock
+    private JwtService jwtService;
+
     private OAuthController oAuthController;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        oAuthController = new OAuthController(hmacValidator, webhookRegistrationService);
+        oAuthController = new OAuthController(hmacValidator, webhookRegistrationService, shopRepository, jwtService);
         
         // Set required properties
         ReflectionTestUtils.setField(oAuthController, "apiKey", "test-api-key");
