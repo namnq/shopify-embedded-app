@@ -1,0 +1,46 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:./shopifyapp
+    username: sa
+    password: password
+    driverClassName: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-here-minimum-32-characters}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+
+shopify:
+  app:
+    api-key: ${SHOPIFY_API_KEY:your-api-key}
+    api-secret: ${SHOPIFY_API_SECRET:your-api-secret}
+    scopes: read_products,write_products,read_orders
+    host: ${APP_HOST:http://localhost:8080}
+
+server:
+  port: 8080
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+        same-site: none
+  ssl:
+    enabled: false  # Enable in production
+
+logging:
+  level:
+    com.example.shopifyapp: INFO
+    org.springframework.web: INFO
+    org.hibernate: ERROR
