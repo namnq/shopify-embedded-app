@@ -26,7 +26,7 @@ shopify-embedded-app/
 
 ## Prerequisites
 
-- Java 21
+- Java 21 (Temurin/OpenJDK 21.0.6 LTS or later)
 - Node.js 18+
 - npm 9+
 - A Shopify Partner account
