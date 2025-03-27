@@ -110,4 +110,17 @@ public class ShopifyHmacValidator {
             return false;
         }
     }
+
+    public boolean validateSessionToken(String token, String shopDomain) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec key = new SecretKeySpec(shopifySecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(key);
+            byte[] hmacBytes = mac.doFinal(shopDomain.getBytes(StandardCharsets.UTF_8));
+            String expectedToken = Hex.encodeHexString(hmacBytes);
+            return token.equals(expectedToken);
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
